@@ -16927,18 +16927,14 @@ const Eu = { id: "wordleForGood" }, Nu = {
     shareTitle: {
       type: String
     },
-	    // Target word encoded as hyphen-separated character codes (e.g. "104-101-97-114-116").
-	    // Historically this was required; we make it optional so the component can self-pick.
-	    word: {
-	      type: String,
-	      default: ""
-	    },
-	    // When set to "true", the component will choose a random word from the built-in
-	    // word list (the large `eo` array) on each page load.
-	    randomWord: {
-	      type: String,
-	      default: "false"
-	    },
+    word: {
+      type: String,
+      default: ""
+    },
+    randomWord: {
+      type: String,
+      default: "false"
+    },
     successSelector: {
       type: String
     },
@@ -16996,8 +16992,7 @@ const Eu = { id: "wordleForGood" }, Nu = {
   },
   setup(e) {
     const s = e;
-	    // Decode "104-101-..." into a word. If empty/undefined, return empty string.
-	    const t = (q) => (q || "").split("-").map((B) => B === " " ? " " : String.fromCharCode(parseInt(B))).join(""), o = (q) => {
+    const t = (q) => (q || "").split("-").map((B) => B === " " ? " " : String.fromCharCode(parseInt(B))).join(""), o = (q) => {
       const B = q ? document.querySelector(q) : null;
       if (B)
         return B;
@@ -17005,31 +17000,27 @@ const Eu = { id: "wordleForGood" }, Nu = {
       for (; se && se?.parentElement?.tagName !== "BODY" && !se?.nextElementSibling; )
         se = se?.parentElement;
       return se?.nextElementSibling || se?.previousElementSibling || se;
-	    }, a = $(!1), r = $(), i = $(), l = $(),
-	    // Pick target word: use encoded `word` if provided, otherwise optionally pick random from built-in list.
-	    // NOTE: `eo` is the large built-in allowed-word list (5-letter lowercase words).
-	    u = $((s.randomWord === "true" || !s.word) ? eo[Math.floor(Math.random() * eo.length)] : t(s.word)),
-	    c = s.keyboardEvents === "true", p = $(s.bgColor), f = $(s.textColor), h = $(s.height), v = o(s.successSelector), E = s.failureSelector ? o(s.failureSelector) : v, z = $(s.tileBorderColor), C = $(
+    }, a = $(!1), r = $(), i = $(), l = $(), u = $((s.randomWord === "true" || !s.word) ? eo[Math.floor(Math.random() * eo.length)] : t(s.word)), c = s.keyboardEvents === "true", p = $(s.bgColor), f = $(s.textColor), h = $(s.height), v = o(s.successSelector), E = s.failureSelector ? o(s.failureSelector) : v, z = $(s.tileBorderColor), C = $(
       at(0.5, z.value, p.value)
     ), P = $(s.tileBgColor), T = $(at(-0.5, P.value, p.value)), Q = $(s.tileTextColor), le = $(s.tileBgWrongColor), G = $(s.tileBgWrongLocationColor), ze = $(s.tileBgCorrectColor), ke = $(s.keyBgColor), S = $(s.keyTextColor), Z = $(s.keyTextSize), W = $(!1), ie = $(null), O = $(null), ee = 5, we = 500;
 
-	    // CSS variables injection (must run AFTER refs are initialized).
-	    Wl((q) => ({
-	      "67e563af": p.value,
-	      c9cd48f2: f.value,
-	      "70a4cd76": h.value,
-	      "4b812f9a": z.value,
-	      "1799eef4": C.value,
-	      "85be8ebe": P.value,
-	      "3dfa56bb": T.value,
-	      "4bb4e338": le.value,
-	      "9a0f90fa": G.value,
-	      "4a9903ca": ze.value,
-	      e259880e: Q.value,
-	      "7f6a738e": ke.value,
-	      "34cc20b4": S.value,
-	      a6cee944: Z.value
-	    }));
+    // [WFG] Apply CSS variables AFTER refs are initialized (prevents TDZ errors)
+    Wl((q) => ({
+      "67e563af": p.value,
+      c9cd48f2: f.value,
+      "70a4cd76": h.value,
+      "4b812f9a": z.value,
+      "1799eef4": C.value,
+      "85be8ebe": P.value,
+      "3dfa56bb": T.value,
+      "4bb4e338": le.value,
+      "9a0f90fa": G.value,
+      "4a9903ca": ze.value,
+      e259880e: Q.value,
+      "7f6a738e": ke.value,
+      "34cc20b4": S.value,
+      a6cee944: Z.value
+    }));
     function Oe(q) {
       if (q.key === "Enter")
         return K();
@@ -17078,10 +17069,20 @@ const Eu = { id: "wordleForGood" }, Nu = {
       );
     }
     function ns(q, B) {
-      if (q === u.value)
-        return Le(), r.value.danceTiles(B), us();
-      if (r.value.getRemainingTiles().length === 0)
-        return Le(), us(!1);
+      // --- DEBUG LOGS ---
+      // This is the point where the game decides if you WON or LOST.
+      // q = the guessed 5-letter word, u.value = the target word.
+      if (q === u.value) {
+        console.log("[WFG] WIN CONDITION MET", { guess: q, answer: u.value });
+        Le();
+        r.value.danceTiles(B);
+        return us(!0);
+      }
+      if (r.value.getRemainingTiles().length === 0) {
+        console.log("[WFG] LOSS CONDITION MET", { guess: q, answer: u.value });
+        Le();
+        return us(!1);
+      }
     }
     function ls() {
       c && window.addEventListener("keydown", Oe), i.value.startInteraction();
@@ -17090,12 +17091,13 @@ const Eu = { id: "wordleForGood" }, Nu = {
       c && window.removeEventListener("keydown", Oe), i && i.value.stopInteraction();
     }
     function us(q = !0, B = 2500) {
+      console.log("[WFG] endGame() called", { won: q, delayMs: B, target: u.value });
       setTimeout(() => {
         // Capture end-game share info (used by any external success/failure templates)
         ie.value = r.value.getResults(), O.value = r.value.getShareTiles();
 
         // ✅ Keep the game visible and show a "Play again" overlay instead of collapsing the UI.
-        $s();
+        $s(q);
 
         // Preserve existing success/failure injection behavior (optional)
         q && v ? (v.dataset.wordleForGood = "win", qs(v)) : !q && E && (E.dataset.wordleForGood = "lose", qs(E));
@@ -17115,12 +17117,14 @@ const Eu = { id: "wordleForGood" }, Nu = {
       return root ? root.querySelector("#wordleForGood") : null;
     }
 
-    function $s() {
+    function $s(won) {
       const rootEl = Bs();
       if (!rootEl) return;
 
       // If overlay already exists, don't duplicate
       if (rootEl.querySelector("#wfg-play-again")) return;
+
+      console.log("[WFG] Showing end overlay", { won, answer: u.value });
 
       const overlay = document.createElement("div");
       overlay.id = "wfg-play-again";
@@ -17143,13 +17147,15 @@ const Eu = { id: "wordleForGood" }, Nu = {
       card.style.textAlign = "center";
 
       const h2 = document.createElement("div");
-      h2.textContent = "Game over";
+      h2.textContent = won ? "Congrats!" : "Game over";
       h2.style.fontWeight = "800";
       h2.style.fontSize = "24px";
       h2.style.marginBottom = "10px";
 
       const p = document.createElement("div");
-      p.textContent = "Want to play again with a new word?";
+      p.textContent = won
+        ? `You got it! The word was ${String(u.value || "").toUpperCase()}. Want to play again?`
+        : `The word was ${String(u.value || "").toUpperCase()}. Want to play again?`;
       p.style.fontSize = "16px";
       p.style.marginBottom = "16px";
 
@@ -17167,6 +17173,7 @@ const Eu = { id: "wordleForGood" }, Nu = {
       btn.style.color = "#111";
 
       btn.addEventListener("click", () => {
+        console.log("[WFG] Play again clicked");
         overlay.remove();
         As();
       });
@@ -17179,8 +17186,10 @@ const Eu = { id: "wordleForGood" }, Nu = {
     }
 
     function As() {
+      console.log("[WFG] Resetting game / picking new word");
       // Pick a new random target word
       u.value = eo[Math.floor(Math.random() * eo.length)];
+      console.log("[WFG] New target word", u.value);
 
       // Clear gameboard tiles
       const host = Fs();
